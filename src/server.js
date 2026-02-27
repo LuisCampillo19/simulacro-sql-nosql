@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import app from './app,js';
+import app from './app.js';
 import { connectMongo } from './config/mongo.js';
 import './config/mysql.js';
 
@@ -17,3 +17,5 @@ const startServer = async () => {
         process.exit(1);
     }
 };
+
+startServer();
