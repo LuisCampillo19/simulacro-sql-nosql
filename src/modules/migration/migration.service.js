@@ -1,7 +1,7 @@
 import fs from 'fs';
 import csv from 'csv-parser';
 import { pool } from '../../config/mysql.js';
-import patientModels from '../patients/patient.models';
+import patientModels from '../patients/patient.models.js';
 
 export const proccessCsv = (filePath) => {
     return new Promise((resolve, reject) => {
@@ -54,7 +54,33 @@ export const proccessCsv = (filePath) => {
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                             [row.appointment_id, row.appointment_date, patient_id, doctor_id, ins_id, row.treatment_code, row.treatment_description, row.treatment_cost, row.amount_paid]
                         );
+
+                        // add data appointment mongo 
+                        if(appoResult.affectedRows > 0){
+                            appointmentAdded++;
+
+                            const newAppointmentForMongo = {
+                                appointmentId: row.appointment_id,
+                                date: row.appointment_date,
+                                doctorName: row.doctor_name,
+                                specialty: row.specialty,
+                                treatmentDescription: row.treatment_description,
+                                amountPaid: amount_paid
+                            };
+
+                            await patientModels.findOneAndUpdate(
+                                { patientEmail: row.patient_email },
+                                {
+                                    $set: { patientName: row.patient_name },
+                                    $push: { appointments: newAppointmentForMongo}
+                                },
+                                { upsert: true, new: true }
+                            );
+                        }
                     }
+
+                    fs.unlinkSync(filePath);
+                    resolve({ message: `Successful migration. Appointments added: ${appointmentAdded}`})
                 } catch (err) {
                     console.error('Error procesando fila');
                     reject(err);

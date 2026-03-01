@@ -1,4 +1,4 @@
-import * as migrationService from './migration.service,js';
+import * as migrationService from './migration.service.js';
 
 export const uploadData = async (req, res) => {
     try {
